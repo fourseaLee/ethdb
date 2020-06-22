@@ -14,7 +14,54 @@ static void ScanChain(int fd, short kind, void *ctx)
 {
 	LOG(INFO) << "scan block begin ";
     Syncer::instance().scanBlockChain(); 
-    SetTimeout("ScanChain", 120);
+    SetTimeout("ScanChain", 10);
+}
+
+void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
+{
+	std::string timestamps = json_block["result"]["timestamp"].get<std::string>();
+	json json_trans;
+	json_trans = json_block["result"]["transactions"];
+
+	json json_tran;
+	for(int i = 0; i < json_trans.size(); i++)
+	{
+	   json_tran = json_trans[i];
+	   std::string value = json_tran["value"].get<std::string>();
+	   std::string from, to, contract;
+	   from = json_tran["from"].get<std::string>();
+	   std::string txid = json_tran["hash"].get<std::string>();
+           if (value  == "0x0")
+	   {
+		contract = json_tran["to"].get<std::string>();
+		std::string input = json_tran["input"].get<std::string>();
+		std::string method  = input.substr(0,10);
+		if (method != "0xa9059cbb")
+		{
+		  continue;
+		}
+		to = input.substr(35,40);
+		value = input.substr(105,40);
+		std::string sql = "INSERT INTO `tokentran` (`txid`, `contract`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + contract + "','" + from + "','" + to +"','" + value +"');";
+                vect_sql_.push_back(sql);
+
+	   }
+	   else
+	  {
+		to = json_tran["to"].get<std::string>();
+		//INSERT INTO `ethdb`.`ethtran` (`txid`, `vin`, `vout`, `value`) VALUES ('dsfasdf', 'fsdfas', 'fasdf', 'fasdf');
+		std::string sql = "INSERT INTO `ethtran` (`txid`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + from + "','" + to +"','" + value +"');";
+		vect_sql_.push_back(sql);
+
+	  }
+
+	}
+	std::string hash = json_block["result"]["hash"].get<std::string>();
+	//INSERT INTO `xsvdb`.`block` (`height`, `timestamps`) VALUES ('23', '123123');
+	std::string sql = "INSERT INTO `block` (`hash`, `height`, `timestamps`) VALUES ('" + hash +
+	   				  "','" + std::to_string(height) + "','" + timestamps + "');";
+
+	vect_sql_.push_back(sql);
 }
 
 void Syncer::appendBlockSql(const json& json_block, const uint64_t& height, std::vector<std::string>& vect_txid)
@@ -136,14 +183,17 @@ void Syncer::scanBlockChain()
 	//refresh blockchain data to db
 	json json_block;
 	json json_tx;
+	json json_tran;
 	std::vector<std::string> vect_txid;
 
 	for (int i = pre_height + 1; i <= cur_height; i++)
 	{
 		json_block.clear();
 		vect_txid.clear();
+	
 		rpc_.getBlock(i, json_block);
-		appendBlockSql(json_block, i, vect_txid);
+		appendBlockToDB(json_block, i);	
+/*		appendBlockSql(json_block, i, vect_txid);
 
 		for (uint j = 0; j < vect_txid.size(); j++)
 		{
@@ -162,7 +212,7 @@ void Syncer::scanBlockChain()
 				appendTxVinVoutSql(json_tx, vect_txid[j]);
 			}			
 		}
-		refreshDB();
+		refreshDB();*/
 	}
 }
 

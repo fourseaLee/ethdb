@@ -26,7 +26,7 @@ public:
 	void appendBlockSql(const json& json_block, const uint64_t& height, std::vector<std::string>& vect_txid);
 
 	void appendTxVinVoutSql(const json& json_tx, const std::string& txid);
-
+	void appendBlockToDB(const json& json_block, const uint64_t& height);
 	void refreshDB();
 
 	void scanBlockChain();

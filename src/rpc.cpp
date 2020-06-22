@@ -13,6 +13,7 @@ static bool CurlPost(const std::string& url, const json &json_post, const std::s
     curl_params.data = json_post.dump();
     std::string response;
     CurlPostParams(curl_params,response);
+    LOG(INFO) << response;
     json_response = json::parse(response);
 	if (!json_response["error"].is_null())
 	{
@@ -49,8 +50,12 @@ bool Rpc::getBlockCount(uint64_t& height)
 	{
 		return false;
 	}
+    std::string hex_number = json_response["result"]["number"].get<std::string>();
+ 	std::stringstream ss;
+	ss << hex_number;
+
+	ss >> std::hex >> height;
 	
-	height = std::stoll(json_response["result"]["number"].get<std::string>());
 	return true;
 }
 
