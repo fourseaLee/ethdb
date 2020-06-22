@@ -7,8 +7,8 @@
 	{
 		"url":"127.0.0.1",
 		"user": "root",
-		"pass": "root890*()",
-		"db": "xsvdb",
+		"pass": "password",
+		"db": "ethdb",
 		"port": 3306
 	}
 }
