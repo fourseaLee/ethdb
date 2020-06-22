@@ -39,16 +39,18 @@ bool Rpc::getBlockCount(uint64_t& height)
 {
     json json_post;
     json json_params = json::array();
+	json_params.push_back("pending");
+	json_params.push_back(true);
     json_post["params"] = json_params;
 
-    structRpc("getblockcount", json_params, json_post);
+    structRpc("eth_getBlockByNumber", json_params, json_post);
     json json_response;	
     if ( !rpcNode(json_post, json_response) )
 	{
 		return false;
 	}
 	
-	height = json_response["result"].get<uint64_t>();
+	height = std::stoll(json_response["result"]["number"].get<std::string>());
 	return true;
 }
 
@@ -56,24 +58,26 @@ bool Rpc::getBlock(const uint64_t& height, json& json_block)
 {
 	json json_post;
     json json_params;
-    json_params.push_back(height);    
+	std::stringstream ss;
+	ss << std::hex << height;
+	std::string hex_height;
+	ss >> hex_height;
+	
+	hex_height = "0x" + hex_height;
+    json_params.push_back(hex_height);
+	json_params.push_back(true);
     json_post["params"] = json_params;
 
-    structRpc("getblockhash", json_params, json_post);
+    structRpc("eth_getBlockByNumber", json_params, json_post);
     json json_response;	
     if ( !rpcNode(json_post, json_response) )
 	{
 		return false;
 	}
 
-	json_params.clear();
-	json_params.push_back(json_response["result"].get<std::string>());	
-    structRpc("getblock", json_params, json_post);
-	if ( !rpcNode(json_post, json_block) )
-	{
-		return false;
-	}
+	json json_transaction  = json_response["result"]["transactions"];
 
+		
 	return true;
 }
 
@@ -86,23 +90,8 @@ bool Rpc::getRawTransaction(const std::string& txid, json& json_tx)
     json_params.push_back(true);	
     json_post["params"] = json_params;
 
-    structRpc("getrawtransaction", json_params, json_post);
+    structRpc("eth_getTransactionByHash", json_params, json_post);
     if ( !rpcNode(json_post, json_tx) )
-	{
-		return false;
-	}
-
-	return true;
-}
-
-bool Rpc::getRawMempool(json& json_rawmempool)
-{
-	json json_post;
-    json json_params = json::array();
-    json_post["params"] = json_params;
-
-    structRpc("getrawmempool", json_params, json_post);
-    if ( !rpcNode(json_post, json_rawmempool) )
 	{
 		return false;
 	}

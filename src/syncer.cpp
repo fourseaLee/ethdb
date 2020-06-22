@@ -17,13 +17,6 @@ static void ScanChain(int fd, short kind, void *ctx)
     SetTimeout("ScanChain", 120);
 }
 
-static void ScanMempool(int fd, short kind, void *ctx)
-{
-	LOG(INFO) << "scan mempool";
-	Syncer::instance().scanMempool();
-    SetTimeout("ScanMempool", 10);
-}
-
 void Syncer::appendBlockSql(const json& json_block, const uint64_t& height, std::vector<std::string>& vect_txid)
 {
 	uint64_t timestamps = json_block["result"]["time"].get<uint64_t>();
@@ -174,47 +167,10 @@ void Syncer::scanBlockChain()
 }
 
 
-void Syncer::scanMempool()
-{
-	// init mempool tx to map_mempool_tx_ from db;
-	if (!init_mempool_)
-	{
-		std::string sql = "SELECT txid FROM mempooltx;";
-		std::map<int, DBMysql::DataType> col_type;
-		col_type[0] = DBMysql::STRING;
-		json json_data;
-		g_db_mysql->getData(sql, col_type, json_data);
-		for(uint i = 0; i < json_data.size(); i++)
-		{
-			map_mempool_tx_[json_data[i][0].get<std::string>()] = true;
-		}
-		init_mempool_ = true;
-	}
-
-	//update the mempool tx from calling rpc
-	uint64_t cur_height  = 0;
-    rpc_.getBlockCount(cur_height);
-	json json_rawmempool;
-	rpc_.getRawMempool(json_rawmempool);
-	json json_tx;
-	std::vector<std::string> vect_txid = json_rawmempool["result"];
-	for (uint i = 0; i < vect_txid.size(); i++)
-	{
-		std::string sql = "INSERT INTO `mempooltx` (`txid`, `height`) VALUES ('" + vect_txid[i] + "','" + std::to_string(cur_height) + "');";
-		map_mempool_tx_[vect_txid[i]] = true;
-		vect_sql_.push_back(sql);
-		rpc_.getRawTransaction(vect_txid[i],json_tx);
-		appendTxVinVoutSql(json_tx, vect_txid[i]);	
-	}
-
-	refreshDB();
-}
-
 Syncer Syncer::single_;
 void Syncer::registerTask(map_event_t& name_events, map_job_t& name_tasks)
 {
     REFLEX_TASK(ScanChain);
-	REFLEX_TASK(ScanMempool);
 }
 
 
