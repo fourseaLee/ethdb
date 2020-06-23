@@ -1,8 +1,10 @@
 {
 	"logpath":"./log",
 	"daemon":true,
-	"nodeurl":"http://127.0.0.1:8332/",
+	"nodeurl":"http://127.0.0.1:8545/",
 	"auth":"dev:a",
+	"begin": 10300000,
+	"end":   10319025,
 	"mysql":
 	{
 		"url":"127.0.0.1",

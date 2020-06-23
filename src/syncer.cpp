@@ -90,46 +90,43 @@ void Syncer::refreshDB()
 void Syncer::scanBlockChain()
 {
 	//check height which is needed to upate
-	std::string sql = "select height from block order by height desc limit 1;";
-	std::map<int,DBMysql::DataType> map_col_type;
-	map_col_type[0] = DBMysql::INT;
-
-	json json_data;
-	g_db_mysql->getData(sql, map_col_type, json_data);
-	uint64_t pre_height  = 0;
-	if (json_data.size() > 0)
+	
+	uint64_t pre_height  = begin_;
+	if (begin_ != 0)
 	{
-		pre_height = json_data[0][0].get<uint64_t>();
+		std::string sql = "select height from block order by height desc limit 1;";
+		std::map<int,DBMysql::DataType> map_col_type;
+		map_col_type[0] = DBMysql::INT;
+
+		json json_data;
+		g_db_mysql->getData(sql, map_col_type, json_data);
+		if (json_data.size() > 0)
+		{
+			pre_height = json_data[0][0].get<uint64_t>();
+		}
 	}
-	else
+
+	uint64_t cur_height  = end_;
+	if (end_ == 0 )
 	{
-	    pre_height = 10000000;
+		rpc_.getBlockCount(cur_height);
 	}
-
-	uint64_t cur_height  = 0;
-	rpc_.getBlockCount(cur_height);
-	cur_height = 10319025;
-
-/*	if (cur_height <= pre_height)
-	{
-		return ;
-	}*/
-
-	//refresh blockchain data to db
+	
 	json json_block;
-	json json_tx;
-	json json_tran;
-	std::vector<std::string> vect_txid;
 
 	for (int i = pre_height + 1; i <= cur_height; i++)
 	{
 		json_block.clear();
-		vect_txid.clear();
 	
 		rpc_.getBlock(i, json_block);
 		appendBlockToDB(json_block, i);	
 
 		refreshDB();
+	}
+
+	if (end_ != 0)
+	{
+		exit(0);
 	}
 }
 

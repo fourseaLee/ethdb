@@ -33,6 +33,12 @@ public:
 
 	void scanMempool();
 
+	void setBeginEnd(const uint64_t& begin, const uint64_t& end)
+	{
+		begin_ = begin;
+		end_ = end;
+	}
+
 public:
 
     void registerTask(map_event_t& name_events, map_job_t& name_tasks);
@@ -48,6 +54,7 @@ protected:
 	std::vector<std::string> vect_sql_;
 	std::map<std::string, bool> map_mempool_tx_;
 	bool init_mempool_ = false;
+	uint64_t begin_ ,end_;
 };
 
 

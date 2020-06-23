@@ -109,8 +109,12 @@ static void RunJob()
 	std::string auth = s_json_conf["auth"].get<std::string>();
 	Rpc rpc;
 	rpc.setRpc(node_url, auth);
+	uint64_t begin = 0 ,end = 0 ;
+	begin = s_json_conf["begin"].get<uint64_t>();
+	end = s_json_conf["end"].get<uint64_t>();
 
 	Syncer::instance().setRpc(rpc);
+	Syncer::instance().setBeginEnd(begin, end);
 	contraller.registerJob(Syncer::instance());
 	contraller.run();
 }
