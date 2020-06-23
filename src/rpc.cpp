@@ -13,7 +13,7 @@ static bool CurlPost(const std::string& url, const json &json_post, const std::s
     curl_params.data = json_post.dump();
     std::string response;
     CurlPostParams(curl_params,response);
-    LOG(INFO) << response;
+    //LOG(INFO) << response;
     json_response = json::parse(response);
 	if (!json_response["error"].is_null())
 	{
@@ -74,13 +74,12 @@ bool Rpc::getBlock(const uint64_t& height, json& json_block)
     json_post["params"] = json_params;
 
     structRpc("eth_getBlockByNumber", json_params, json_post);
-    json json_response;	
-    if ( !rpcNode(json_post, json_response) )
+//    json json_response;	
+    if ( !rpcNode(json_post, json_block) )
 	{
 		return false;
 	}
 
-	json json_transaction  = json_response["result"]["transactions"];
 
 		
 	return true;
