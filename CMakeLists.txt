@@ -17,7 +17,7 @@ set(base_src src/main.cpp
 set(job_src src/job/base.cpp
 			src/job/job.cpp)
 
-set(link_lib curl mysqlclient event boost_system boost_filesystem boost_program_options glog)
+set(link_lib curl mysqlclient event boost_system boost_filesystem boost_program_options glog gmp gmpxx)
 
 add_executable(dbeth ${base_src} ${job_src})
 

@@ -1,7 +1,9 @@
 #include "syncer.h"
 #include <glog/logging.h>
 #include "db_mysql.h"
-
+#include <gmp.h>
+#include <gmpxx.h>
+std::map<std::string, int> s_map_address_id;
 static void SetTimeout(const std::string& name, int second)
 {
     struct timeval timeout ;
@@ -13,6 +15,17 @@ static void SetTimeout(const std::string& name, int second)
 static void ScanChain(int fd, short kind, void *ctx)
 {
     LOG(INFO) << "scan block begin ";
+	std::string sql = "SELECT address FROM account;";
+	std::map<int,DBMysql::DataType> map_col_type;
+	map_col_type[0] = DBMysql::STRING;
+
+	json json_data;
+	g_db_mysql->getData(sql, map_col_type, json_data);
+	for(int i = 0; i < json_data.size(); i++)
+	{
+		s_map_address_id[json_data[0][i].get<std::string>()] = i;
+	}
+
     Syncer::instance().scanBlockChain(); 
     SetTimeout("ScanChain", 10);
 }
@@ -24,53 +37,68 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 	json_trans = json_block["result"]["transactions"];
 
 	json json_tran;
+	mpz_class amount;
 	for(int i = 0; i < json_trans.size(); i++)
 	{
-	   json_tran = json_trans[i];
-	  // LOG(INFO) << json_tran.dump() ;
-	   std::string value = json_tran["value"].get<std::string>();
-	   std::string from, to, contract;
-	   from = json_tran["from"].get<std::string>();
-	   std::string txid = json_tran["hash"].get<std::string>();
-	   if(json_tran["to"].is_null())
-	   {
-	      continue;
-	   }  
-
-           if (value  == "0x0")
-	   {
-		contract = json_tran["to"].get<std::string>();
-		if (contract != "0xdac17f958d2ee523a2206206994597c13d831ec7")
+		json_tran = json_trans[i];
+		// LOG(INFO) << json_tran.dump() ;
+		std::string value = json_tran["value"].get<std::string>();
+		std::string from, to, contract;
+		from = json_tran["from"].get<std::string>();
+		std::string txid = json_tran["hash"].get<std::string>();
+		if(json_tran["to"].is_null())
 		{
-		  continue;
-		}
+			continue;
+		}  
 
-		std::string input = json_tran["input"].get<std::string>();
-		std::string method  = input.substr(0,10);
-		if (method != "0xa9059cbb" || input.size() < 140)
+		if (value  == "0x0")
 		{
-		  continue;
+			contract = json_tran["to"].get<std::string>();
+			if (contract != "0xdac17f958d2ee523a2206206994597c13d831ec7")
+			{
+				continue;
+			}
+
+			std::string input = json_tran["input"].get<std::string>();
+			std::string method  = input.substr(0,10);
+			if (method != "0xa9059cbb" || input.size() < 140)
+			{
+				continue;
+			}
+			to ="0x" + input.substr(35,40);
+
+			if (s_map_address_id.find(from) == s_map_address_id.end() && s_map_address_id.find(to) == s_map_address_id.end())
+			{
+				continue;
+			}
+
+			value ="0x" + input.substr(105,40);
+			amount = value;
+
+			std::string sql = "INSERT INTO `tokentran` (`txid`, `contract`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + contract + "','" + from + "','" + to +"','" + amount.get_str() +"');";
+			vect_sql_.push_back(sql);
+
 		}
-		to ="0x" + input.substr(35,40);
-		value = input.substr(105,40);
-		std::string sql = "INSERT INTO `tokentran` (`txid`, `contract`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + contract + "','" + from + "','" + to +"','" + value +"');";
-		vect_sql_.push_back(sql);
+		else
+		{
+			to = json_tran["to"].get<std::string>();
+			if (s_map_address_id.find(from) == s_map_address_id.end() && s_map_address_id.find(to) == s_map_address_id.end())
+			{
+				continue;
+			}
 
-	   }
-	   else
-	  {
-		to = json_tran["to"].get<std::string>();
-		//INSERT INTO `ethdb`.`ethtran` (`txid`, `vin`, `vout`, `value`) VALUES ('dsfasdf', 'fsdfas', 'fasdf', 'fasdf');
-		std::string sql = "INSERT INTO `ethtran` (`txid`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + from + "','" + to +"','" + value +"');";
-		vect_sql_.push_back(sql);
+			//INSERT INTO `ethdb`.`ethtran` (`txid`, `vin`, `vout`, `value`) VALUES ('dsfasdf', 'fsdfas', 'fasdf', 'fasdf');
+			amount = value;
+			std::string sql = "INSERT INTO `ethtran` (`txid`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + from + "','" + to +"','" + amount.get_str() +"');";
+			vect_sql_.push_back(sql);
 
-	  }
+		}
 
 	}
 	std::string hash = json_block["result"]["hash"].get<std::string>();
 	//INSERT INTO `xsvdb`.`block` (`height`, `timestamps`) VALUES ('23', '123123');
 	std::string sql = "INSERT INTO `block` (`hash`, `height`, `timestamps`) VALUES ('" + hash +
-	   				  "','" + std::to_string(height) + "','" + timestamps + "');";
+		"','" + std::to_string(height) + "','" + timestamps + "');";
 
 	vect_sql_.push_back(sql);
 }
