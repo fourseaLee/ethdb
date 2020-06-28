@@ -120,8 +120,8 @@ void Syncer::scanBlockChain()
 	
 		rpc_.getBlock(i, json_block);
 		appendBlockToDB(json_block, i);	
-		LOG(INFO) << "block height" ;
-		if(i % 50 == 0)
+		LOG(INFO) << "block height: " << i;
+		if(i % 100 == 0 || i == cur_height)
 		  refreshDB();
 	}
 
