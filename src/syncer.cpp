@@ -32,11 +32,6 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 	   std::string from, to, contract;
 	   from = json_tran["from"].get<std::string>();
 	   std::string txid = json_tran["hash"].get<std::string>();
-	   if(txid == "0x64154406ce6f8da1e8603bd2e7cb1ae786bdfb9708bf732a212790cf854d7f2d")
-	   {
-		   int test =0;
-		   ++test;
-	   }
 	   if(json_tran["to"].is_null())
 	   {
 	      continue;
@@ -45,6 +40,11 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
            if (value  == "0x0")
 	   {
 		contract = json_tran["to"].get<std::string>();
+		if (contract != "0xdac17f958d2ee523a2206206994597c13d831ec7")
+		{
+		  continue;
+		}
+
 		std::string input = json_tran["input"].get<std::string>();
 		std::string method  = input.substr(0,10);
 		if (method != "0xa9059cbb" || input.size() < 140)
@@ -92,7 +92,7 @@ void Syncer::scanBlockChain()
 	//check height which is needed to upate
 	
 	uint64_t pre_height  = begin_;
-	if (begin_ != 0)
+	if (begin_ == 0)
 	{
 		std::string sql = "select height from block order by height desc limit 1;";
 		std::map<int,DBMysql::DataType> map_col_type;
@@ -120,8 +120,9 @@ void Syncer::scanBlockChain()
 	
 		rpc_.getBlock(i, json_block);
 		appendBlockToDB(json_block, i);	
-
-		refreshDB();
+		LOG(INFO) << "block height" ;
+		if(i % 50 == 0)
+		  refreshDB();
 	}
 
 	if (end_ != 0)

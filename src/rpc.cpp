@@ -28,7 +28,7 @@ static bool CurlPost(const std::string& url, const json &json_post, const std::s
 
 bool Rpc::structRpc(const std::string& method, const json& json_params, json& json_post)
 {
-    json_post["jsonrpc"] = "1.0";
+    json_post["jsonrpc"] = "2.0";
     json_post["id"] = "curltest";
     json_post["method"] = method;
     json_post["params"] = json_params;
