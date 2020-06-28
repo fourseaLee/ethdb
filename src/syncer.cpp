@@ -23,7 +23,7 @@ static void ScanChain(int fd, short kind, void *ctx)
 	g_db_mysql->getData(sql, map_col_type, json_data);
 	for(int i = 0; i < json_data.size(); i++)
 	{
-		s_map_address_id[json_data[0][i].get<std::string>()] = i;
+		s_map_address_id[json_data[i][0].get<std::string>()] = i;
 	}
 
     Syncer::instance().scanBlockChain(); 
