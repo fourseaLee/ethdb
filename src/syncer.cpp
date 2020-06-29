@@ -65,7 +65,7 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 			{
 				continue;
 			}
-			to ="0x" + input.substr(35,40);
+			to ="0x" + input.substr(34,40);
 
 			if (s_map_address_id.find(from) == s_map_address_id.end() && s_map_address_id.find(to) == s_map_address_id.end())
 			{
@@ -75,7 +75,8 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 			value ="0x" + input.substr(105,40);
 			amount = value;
 
-			std::string sql = "INSERT INTO `tokentran` (`txid`, `contract`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + contract + "','" + from + "','" + to +"','" + amount.get_str() +"');";
+			std::string sql = "INSERT INTO `tokentran` (`txid`, `contract`, `vin`, `vout`, `amount`,`height`) VALUES ('" + txid + "','" + contract + "','" + from + "','" + to +"','" + 
+				amount.get_str() + "','" + std::to_string(height) +"');";
 			vect_sql_.push_back(sql);
 
 		}
@@ -89,7 +90,8 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 
 			//INSERT INTO `ethdb`.`ethtran` (`txid`, `vin`, `vout`, `value`) VALUES ('dsfasdf', 'fsdfas', 'fasdf', 'fasdf');
 			amount = value;
-			std::string sql = "INSERT INTO `ethtran` (`txid`, `vin`, `vout`, `amount`) VALUES ('" + txid + "','" + from + "','" + to +"','" + amount.get_str() +"');";
+			std::string sql = "INSERT INTO `ethtran` (`txid`, `vin`, `vout`, `amount`,`height`) VALUES ('" + txid + "','" + from + "','" + to +"','" +
+			   	amount.get_str() +"','" + std::to_string(height) + "');";
 			vect_sql_.push_back(sql);
 
 		}
