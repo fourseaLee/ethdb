@@ -61,7 +61,7 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 
 			std::string input = json_tran["input"].get<std::string>();
 			std::string method  = input.substr(0,10);
-			if (method != "0xa9059cbb" || input.size() < 140)
+			if (method != "0xa9059cbb" || input.size() < 135)
 			{
 				continue;
 			}
@@ -72,7 +72,7 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 				continue;
 			}
 
-			value ="0x" + input.substr(105,40);
+			value ="0x" + input.substr(input.size() - 41,40);
 			amount = value;
 
 			std::string sql = "INSERT INTO `tokentran` (`txid`, `contract`, `vin`, `vout`, `amount`,`height`) VALUES ('" + txid + "','" + contract + "','" + from + "','" + to +"','" + 
