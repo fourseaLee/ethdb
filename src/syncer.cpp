@@ -32,7 +32,7 @@ static void ScanChain(int fd, short kind, void *ctx)
 
 void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 {
-	std::string timestamps = json_block["result"]["timestamp"].get<std::string>();
+	//std::string timestamps = json_block["result"]["timestamp"].get<std::string>();
 	json json_trans;
 	json_trans = json_block["result"]["transactions"];
 
@@ -97,12 +97,12 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 		}
 
 	}
-	std::string hash = json_block["result"]["hash"].get<std::string>();
+/*	std::string hash = json_block["result"]["hash"].get<std::string>();
 	//INSERT INTO `xsvdb`.`block` (`height`, `timestamps`) VALUES ('23', '123123');
 	std::string sql = "INSERT INTO `block` (`hash`, `height`, `timestamps`) VALUES ('" + hash +
 		"','" + std::to_string(height) + "','" + timestamps + "');";
 
-	vect_sql_.push_back(sql);
+	vect_sql_.push_back(sql);*/
 }
 
 void Syncer::refreshDB()
@@ -150,9 +150,19 @@ void Syncer::scanBlockChain()
 	
 		rpc_.getBlock(i, json_block);
 		appendBlockToDB(json_block, i);	
-		LOG(INFO) << "block height: " << i;
-		if(i % 100 == 0 || i == cur_height)
-		  refreshDB();
+		//LOG(INFO) << "block height: " << i;
+		if(i % 500 == 0 || i == cur_height)
+		{
+
+			LOG(INFO) << "block height: " << i;
+			std::string timestamps = json_block["result"]["timestamp"].get<std::string>();
+			std::string hash = json_block["result"]["hash"].get<std::string>();
+			//INSERT INTO `xsvdb`.`block` (`height`, `timestamps`) VALUES ('23', '123123');
+			std::string sql = "INSERT INTO `block` (`hash`, `height`, `timestamps`) VALUES ('" + hash +
+				"','" + std::to_string(i) + "','" + timestamps + "');";
+			vect_sql_.push_back(sql);
+		 	refreshDB();
+		}
 	}
 
 	if (end_ != 0)
