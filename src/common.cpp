@@ -6,6 +6,7 @@
 #include <sstream>
 #include <glog/logging.h>
 
+bool g_node_dump = false;
 static size_t ReplyCallback(void *ptr, size_t size, size_t nmemb, void *stream)
 {
     std::string *str = (std::string*)stream;
@@ -50,6 +51,7 @@ bool CurlPostParams(const CurlParams &params, std::string &response)
     {
         error_str = curl_easy_strerror(res);
 		LOG(ERROR)<<"curl error: " <<error_str << std::endl;
+		g_node_dump = true;
         return false;
     }
     return true;

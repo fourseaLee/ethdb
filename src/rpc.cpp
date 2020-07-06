@@ -12,7 +12,9 @@ static bool CurlPost(const std::string& url, const json &json_post, const std::s
  // curl_params.content_type = "content-type:text/plain";
     curl_params.data = json_post.dump();
     std::string response;
-    CurlPostParams(curl_params,response);
+    bool ret = CurlPostParams(curl_params,response);
+	if (!ret)
+		return false;
     //LOG(INFO) << response;
     json_response = json::parse(response);
 	if (!json_response["error"].is_null())
