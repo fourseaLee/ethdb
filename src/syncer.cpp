@@ -97,12 +97,6 @@ void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
         }
 
     }
-/*  std::string hash = json_block["result"]["hash"].get<std::string>();
-    //INSERT INTO `xsvdb`.`block` (`height`, `timestamps`) VALUES ('23', '123123');
-    std::string sql = "INSERT INTO `block` (`hash`, `height`, `timestamps`) VALUES ('" + hash +
-        "','" + std::to_string(height) + "','" + timestamps + "');";
-
-    vect_sql_.push_back(sql);*/
 }
 
 void Syncer::refreshDB()
@@ -120,7 +114,7 @@ void Syncer::refreshDB()
 void Syncer::scanBlockChain()
 {
     //check height which is needed to upate
-    
+
     uint64_t pre_height  = begin_;
     if (begin_ == 0)
     {
@@ -141,13 +135,13 @@ void Syncer::scanBlockChain()
     {
         rpc_.getBlockCount(cur_height);
     }
-    
+
     json json_block;
 
     for (int i = pre_height + 1; i <= cur_height; i++)
     {
         json_block.clear();
-    
+
         rpc_.getBlock(i, json_block);
         if (g_node_dump)
         {

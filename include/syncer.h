@@ -57,6 +57,4 @@ protected:
 	uint64_t begin_ ,end_;
 };
 
-
-
 #endif

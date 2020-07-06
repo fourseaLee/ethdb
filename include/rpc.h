@@ -25,12 +25,12 @@ public:
 	bool getRawMempool(json& json_mempool);
 
 public:
-	bool setRpc(std::string node_url, std::string auth)
-	{
-		node_url_ = node_url;
-		auth_ = auth;
-		return true;
-	}    
+    bool setRpc(std::string node_url, std::string auth)
+    {
+        node_url_ = node_url;
+        auth_ = auth;
+        return true;
+    }    
 
     bool rpcNode(const json& json_post, json& json_response);
 

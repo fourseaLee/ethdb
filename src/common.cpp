@@ -44,14 +44,14 @@ bool CurlPostParams(const CurlParams &params, std::string &response)
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 120);
         res = curl_easy_perform(curl);
     }
-	curl_slist_free_all(headers);
+    curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK)
     {
         error_str = curl_easy_strerror(res);
-		LOG(ERROR)<<"curl error: " <<error_str << std::endl;
-		g_node_dump = true;
+        LOG(ERROR)<<"curl error: " <<error_str << std::endl;
+        g_node_dump = true;
         return false;
     }
     return true;
