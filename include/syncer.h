@@ -30,6 +30,8 @@ public:
 	void refreshDB();
 
 	void scanBlockChain();
+    
+    void verifyTransaction();
 
 	void scanMempool();
 

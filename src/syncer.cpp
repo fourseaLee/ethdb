@@ -30,6 +30,14 @@ static void ScanChain(int fd, short kind, void *ctx)
     SetTimeout("ScanChain", 10*60);
 }
 
+static void VerifyTransaction(int fd, short kind, void *ctx)
+{
+    LOG(INFO) << "verify transaction begin ";
+
+    Syncer::instance().verifyTransaction(); 
+    SetTimeout("VerifyTransaction", 10);
+}
+
 void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
 {
     //std::string timestamps = json_block["result"]["timestamp"].get<std::string>();
@@ -111,6 +119,68 @@ void Syncer::refreshDB()
     LOG(INFO) << "refresh DB end" ;
 }
 
+void Syncer::verifyTransaction()
+{
+    std::string sql_eth = "SELECT txid FROM ethtran;";
+    std::string sql_usdt = "SELECT txid FROM tokentran;";
+    std::map<int,DBMysql::DataType> map_col_type;
+    map_col_type[0] = DBMysql::STRING;
+
+    json json_data;
+    g_db_mysql->getData(sql_eth, map_col_type, json_data);
+    std::string  txid;
+    json json_transaction;
+    std::string status;
+    std::string sql;
+    bool ret = false;
+    for(int i = 0; i < json_data.size(); i++)
+    {
+        txid = json_data[i][0].get<std::string>(); 
+        ret = rpc_.getRawTransaction(txid, json_transaction);
+        if (g_node_dump)
+        {
+            g_node_dump = false;
+            break;  
+        }
+
+        if (!ret)
+        {
+            continue;
+        }
+
+        status = json_transaction["result"]["status"].get<std::string>().substr(2,1);
+        sql = "UPDATE ethtran set status = '" + status + "' WHERE txid = '" + txid + "';";
+        vect_sql_.push_back(sql);
+    }
+
+    refreshDB();
+
+    g_db_mysql->getData(sql_usdt, map_col_type, json_data);
+
+    for(int i = 0; i < json_data.size(); i++)
+    {
+        txid = json_data[i][0].get<std::string>(); 
+        ret = rpc_.getRawTransaction(txid, json_transaction);
+        if (g_node_dump)
+        {
+            g_node_dump = false;
+            break;  
+        }
+
+        if (!ret)
+        {
+            continue;
+        }
+
+        
+        status = json_transaction["result"]["status"].get<std::string>().substr(2,1);
+        sql = "UPDATE tokentran set status = '" + status + "' WHERE txid = '" + txid +"';";
+        vect_sql_.push_back(sql);
+    }
+
+    refreshDB();
+
+}
 void Syncer::scanBlockChain()
 {
     //check height which is needed to upate
@@ -177,6 +247,7 @@ Syncer Syncer::single_;
 void Syncer::registerTask(map_event_t& name_events, map_job_t& name_tasks)
 {
     REFLEX_TASK(ScanChain);
+    REFLEX_TASK(VerifyTransaction);
 }
 
 

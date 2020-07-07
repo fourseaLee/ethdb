@@ -93,10 +93,9 @@ bool Rpc::getRawTransaction(const std::string& txid, json& json_tx)
     json json_post;
     json json_params;
     json_params.push_back(txid);
-    json_params.push_back(true);	
     json_post["params"] = json_params;
 
-    structRpc("eth_getTransactionByHash", json_params, json_post);
+    structRpc("eth_getTransactionReceipt", json_params, json_post);
     if ( !rpcNode(json_post, json_tx) )
     {
         return false;
