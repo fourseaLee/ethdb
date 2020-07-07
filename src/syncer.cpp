@@ -33,9 +33,8 @@ static void ScanChain(int fd, short kind, void *ctx)
 static void VerifyTransaction(int fd, short kind, void *ctx)
 {
     LOG(INFO) << "verify transaction begin ";
-
     Syncer::instance().verifyTransaction(); 
-    SetTimeout("VerifyTransaction", 10);
+    SetTimeout("VerifyTransaction", 2*60);
 }
 
 void Syncer::appendBlockToDB(const json& json_block, const uint64_t& height)
@@ -121,8 +120,8 @@ void Syncer::refreshDB()
 
 void Syncer::verifyTransaction()
 {
-    std::string sql_eth = "SELECT txid FROM ethtran;";
-    std::string sql_usdt = "SELECT txid FROM tokentran;";
+    std::string sql_eth = "SELECT txid FROM ethtran WHERE status = -1;";
+    std::string sql_usdt = "SELECT txid FROM tokentran WHERE status = -1;";
     std::map<int,DBMysql::DataType> map_col_type;
     map_col_type[0] = DBMysql::STRING;
 
@@ -155,6 +154,7 @@ void Syncer::verifyTransaction()
 
     refreshDB();
 
+    json_data.clear();
     g_db_mysql->getData(sql_usdt, map_col_type, json_data);
 
     for(int i = 0; i < json_data.size(); i++)
